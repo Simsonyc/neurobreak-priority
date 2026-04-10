@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DiagnosticSessionStatus {
+  created
+  in_progress
+  ready_to_finalize
+  finalizing
+  completed
+  error
+}
+
+enum ProfileSelected {
+  entrepreneur
+  salarie
+  independant
+  createur
+}
+
+model DiagnosticSession {
+  id                  String                  @id @default(cuid())
+  firstName           String                  @map("first_name")
+  email               String
+  profilSelected      ProfileSelected         @map("profil_selected")
+  status              DiagnosticSessionStatus @default(created)
+  messages            Json                    @default("[]")
+  lastDiagnosticState Json?                   @map("last_diagnostic_state")
+  resultId            String?                 @unique @map("result_id")
+  createdAt           DateTime                @default(now()) @map("created_at")
+  updatedAt           DateTime                @updatedAt @map("updated_at")
+
+  result DiagnosticResult?
+
+  @@map("diagnostic_sessions")
+}
+
+model DiagnosticResult {
+  id             String          @id @default(cuid())
+  sessionId      String          @unique @map("session_id")
+  firstName      String          @map("first_name")
+  email          String
+  profilSelected ProfileSelected @map("profil_selected")
+  diagnosticJson Json            @map("diagnostic_json")
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  session DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("diagnostic_results")
+}
