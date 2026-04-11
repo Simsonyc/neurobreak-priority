@@ -25,16 +25,21 @@ function normalizeImpactLevel(score: number): "high" | "medium" | "low" {
   return "low";
 }
 
-function normalizeDiagnostic(data: FinalDiagnostic): FinalDiagnostic {
+function normalizeDiagnostic(data: any): FinalDiagnostic {
   return {
     ...data,
-    priorities: data.priorities
-      .map((priority) => ({
+    meta: {
+      ...data.meta,
+      version: "1.0",
+      language: "fr",
+    },
+    priorities: (data.priorities ?? [])
+      .map((priority: any) => ({
         ...priority,
         impact_level: normalizeImpactLevel(priority.impact_score),
       }))
-      .sort((a, b) => a.rank - b.rank),
-  };
+      .sort((a: any, b: any) => a.rank - b.rank),
+  } as FinalDiagnostic;
 }
 
 async function generateValidatedDiagnostic(prompt: string): Promise<FinalDiagnostic> {
