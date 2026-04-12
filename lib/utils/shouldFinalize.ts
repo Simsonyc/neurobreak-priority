@@ -5,7 +5,7 @@ type ShouldFinalizeInput = {
   enoughInformation: boolean;
 };
 
-export const HARD_STOP_AT = 12;
+export const HARD_STOP_AT = 14;
 
 export function shouldFinalize({
   userMessageCount,
@@ -13,32 +13,27 @@ export function shouldFinalize({
   coveredDimensionsCount,
   enoughInformation,
 }: ShouldFinalizeInput): boolean {
-  // 🔥 1. HARD STOP (sécurité absolue)
+  // sécurité absolue
   if (userMessageCount >= HARD_STOP_AT) {
     return true;
   }
 
-  // 🔥 2. minimum réel (évite finalisation trop tôt)
-  const hasMinimumDepth = userMessageCount >= 7;
+  // on ne finalise jamais avant une vraie profondeur
+  const hasMinimumDepth = userMessageCount >= 10;
 
-  // 🔥 3. profondeur psychologique minimale
-  const hasEnoughCoverage = coveredDimensionsCount >= 5;
+  // on veut une couverture plus large des dimensions
+  const hasEnoughCoverage = coveredDimensionsCount >= 7;
 
-  // 🔥 4. score IA (indicatif seulement)
-  const hasGoodScore = completionScore >= 0.75;
+  // score IA plus exigeant
+  const hasGoodScore = completionScore >= 0.82;
 
-  // 🔥 5. validation IA
+  // validation IA
   const aiFeelsReady = enoughInformation === true;
 
-  // 🔥 6. logique combinée plus robuste
-  if (
+  return (
     hasMinimumDepth &&
     hasEnoughCoverage &&
     hasGoodScore &&
     aiFeelsReady
-  ) {
-    return true;
-  }
-
-  return false;
+  );
 }
