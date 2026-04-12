@@ -129,7 +129,7 @@ export function ChatShell() {
       }
 
       const data = (await response.json()) as FinalizeResponse;
-      router.push(`/diagnostic/result/${data.result_id}`);
+      window.location.href = `https://neuropriority-reveal.vibepreview.com/?rid=${data.result_id}`;
     } catch (err) {
       console.error(err);
       setError("Impossible de finaliser le diagnostic.");
