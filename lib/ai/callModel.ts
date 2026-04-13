@@ -51,7 +51,7 @@ export async function callConversationModel({
     },
     body: JSON.stringify({
       model: "gpt-4.1-mini",
-      temperature: 0.3, // 🔥 plus bas = plus structuré
+      temperature: 0.55, // 🔥 plus bas = trop structuré
       response_format: { type: "json_object" },
       messages: [
         {
