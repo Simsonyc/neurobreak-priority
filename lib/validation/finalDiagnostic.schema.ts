@@ -53,6 +53,54 @@ const blockSchema = z.object({
   impact_level: impactLevelSchema,
 });
 
+const dimensionScoresSchema = z.object({
+  liberte_autonomie: z.number().int().min(0).max(10),
+  securite_stabilite: z.number().int().min(0).max(10),
+  croissance_progression: z.number().int().min(0).max(10),
+  impact_reconnaissance: z.number().int().min(0).max(10),
+  liens_humains: z.number().int().min(0).max(10),
+  famille: z.number().int().min(0).max(10),
+  creation_expression: z.number().int().min(0).max(10),
+  aventure_experiences: z.number().int().min(0).max(10),
+  sens_mission: z.number().int().min(0).max(10),
+  confort_materiel: z.number().int().min(0).max(10),
+});
+
+const radarDataSchema = z.object({
+  liberte_autonomie: z.number().min(0).max(100),
+  securite_stabilite: z.number().min(0).max(100),
+  croissance_progression: z.number().min(0).max(100),
+  impact_reconnaissance: z.number().min(0).max(100),
+  liens_humains: z.number().min(0).max(100),
+  famille: z.number().min(0).max(100),
+  creation_expression: z.number().min(0).max(100),
+  aventure_experiences: z.number().min(0).max(100),
+  sens_mission: z.number().min(0).max(100),
+  confort_materiel: z.number().min(0).max(100),
+});
+
+const architectureComponentSchema = z.object({
+  name: z.string().min(1),
+  role: z.string().min(1),
+  priority_link: z.string().min(1),
+  complexity: z.enum(["faible", "moyenne", "élevée"]),
+});
+
+const priorityConflictSchema = z.object({
+  conflict: z.string().min(1),
+  resolution_direction: z.string().min(1),
+});
+
+const businessBlueprintSchema = z.object({
+  business_model: z.object({
+    type: z.string().min(1),
+    why_aligned: z.string().min(1),
+    core_requirements: z.array(z.string().min(1)).min(1),
+  }),
+  architecture_required: z.array(architectureComponentSchema).min(1),
+  priority_conflicts: z.array(priorityConflictSchema).min(1),
+});
+
 export const finalDiagnosticSchema = z.object({
   meta: z.object({
     version: z.literal("1.0"),
@@ -73,22 +121,26 @@ export const finalDiagnosticSchema = z.object({
     core_fear: z.string().min(1),
     hidden_pattern: z.string().min(1),
   }),
+  profil_summary: z.string().min(1).optional(),
+  model_recommande: z.string().min(1).optional(),
   priorities: z.array(prioritySchema).min(8).max(10),
+  dimension_scores: dimensionScoresSchema.optional(),
+  radar_data: radarDataSchema.optional(),
+  business_blueprint: businessBlueprintSchema.optional(),
   tensions: z.array(tensionSchema).min(1),
-  blocks: z.array(blockSchema).min(1),
+  // Anciens champs — optionnels pour compatibilité descendante
+  blocks: z.array(blockSchema).optional(),
   actions: z.object({
-    immediate: z.array(
-      z.object({
-        title: z.string().min(1),
-        description: z.string().min(1),
-      })
-    ).min(1),
+    immediate: z.array(z.object({
+      title: z.string().min(1),
+      description: z.string().min(1),
+    })).min(1),
     habits_to_change: z.array(z.string()),
     main_lever: z.object({
       title: z.string().min(1),
       description: z.string().min(1),
     }),
-  }),
+  }).optional(),
   projection: z.object({
     aligned_future: z.string().min(1),
     what_changes: z.array(z.string()).min(1),
