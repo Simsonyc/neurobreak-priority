@@ -93,13 +93,42 @@ export function ChatShell() {
 
       const data = (await response.json()) as CreateSessionResponse;
       setSessionId(data.session_id);
-
       setMessages([]);
+
+      // Déclenche automatiquement la première question QCM
+      await triggerFirstQuestion(data.session_id);
     } catch (err) {
       console.error(err);
       setError("Impossible de créer la session.");
     } finally {
       setIsCreatingSession(false);
+    }
+  }
+
+  async function triggerFirstQuestion(currentSessionId: string) {
+    setIsSending(true);
+    try {
+      const response = await fetch("/api/diagnostic/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: currentSessionId,
+          user_message: "Démarre le diagnostic.",
+        }),
+      });
+      if (!response.ok) return;
+      const data = (await response.json()) as ChatResponse;
+      const assistantMessage: UiMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: data.assistant_message,
+      };
+      setMessages([assistantMessage]);
+      setDiagnosticState(data.diagnostic_state);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSending(false);
     }
   }
 
