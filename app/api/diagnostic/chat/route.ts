@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { callConversationModel } from "@/lib/ai/callModel";
-import { shouldFinalize } from "@/lib/utils/shouldFinalize";
+import { shouldFinalize, getFinalizeReasonLabel } from "@/lib/utils/shouldFinalize";
 import { z } from "zod";
 
 const chatSchema = z.object({
@@ -28,24 +28,56 @@ function makeMessage(
   };
 }
 
-// 🔥 NOUVEAU : détecte répétition
-function isRepeatingPattern(messages: StoredMessage[]) {
+// Marqueur unique pour identifier le message de boucle forcée.
+// Permet de ne pas le confondre avec un vrai message de l'IA lors de la
+// détection au tour suivant.
+const LOOP_BREAK_MARKER = "__loop_break__";
+
+// Détecte une vraie boucle conversationnelle en excluant les messages de
+// boucle forcée déjà injectés — pour éviter que la sortie de boucle ne
+// déclenche elle-même la boucle au tour suivant.
+function isRepeatingPattern(messages: StoredMessage[]): boolean {
   if (messages.length < 6) return false;
 
-  const lastAssistantMessages = messages
-    .filter((m) => m.role === "assistant")
+  // On ignore les messages de boucle forcée déjà envoyés
+  const realAssistantMessages = messages
+    .filter(
+      (m) =>
+        m.role === "assistant" && !m.content.includes(LOOP_BREAK_MARKER)
+    )
     .slice(-3)
     .map((m) => m.content.toLowerCase());
 
-  return (
-    lastAssistantMessages[0] &&
-    lastAssistantMessages.every((msg) =>
-      msg.includes("choisir") ||
-      msg.includes("tension") ||
-      msg.includes("déléguer")
-    )
-  );
+  if (realAssistantMessages.length < 3) return false;
+
+  // Détecte si les 3 derniers vrais messages de l'IA tournent autour des
+  // mêmes thèmes — signal que le modèle est bloqué
+  const loopSignals = ["tu bloques", "même point", "contrôle", "déléguer", "confiance"];
+  const matchCount = realAssistantMessages.filter((msg) =>
+    loopSignals.some((signal) => msg.includes(signal))
+  ).length;
+
+  return matchCount >= 2;
 }
+
+const LOOP_BREAK_MESSAGE = `${LOOP_BREAK_MARKER}
+On tourne autour du même point. Je vais forcer une clarification.
+
+👉 Si tu dois choisir ce qui te bloque le plus aujourd'hui :
+
+A) peur de revivre un échec
+B) besoin de contrôle total
+C) difficulté à faire confiance
+D) manque de méthode pour déléguer
+E) autre chose (précise)
+
+Choisis UNE seule option. Pas deux.`.trim();
+
+// Texte affiché à l'utilisateur — sans le marqueur technique
+const LOOP_BREAK_DISPLAY = LOOP_BREAK_MESSAGE.replace(
+  LOOP_BREAK_MARKER + "\n",
+  ""
+);
 
 export async function POST(req: Request) {
   try {
@@ -67,12 +99,12 @@ export async function POST(req: Request) {
     const userMessage = makeMessage("user", parsed.user_message);
     const updatedMessagesAfterUser = [...existingMessages, userMessage];
 
-    // 🔥 NOUVEAU : détection boucle
     const isLooping = isRepeatingPattern(updatedMessagesAfterUser);
 
     const conversationHistory = updatedMessagesAfterUser.map((message) => ({
       role: message.role,
-      content: message.content,
+      // On nettoie le marqueur avant d'envoyer l'historique à l'IA
+      content: message.content.replace(LOOP_BREAK_MARKER + "\n", ""),
     }));
 
     const modelResult = await callConversationModel({
@@ -81,43 +113,38 @@ export async function POST(req: Request) {
       conversationHistory,
     });
 
-    let assistantText = modelResult.assistant_message;
+    // Si boucle détectée : on remplace le message affiché mais on stocke
+    // le marqueur pour que la détection future fonctionne correctement
+    const assistantStoredText = isLooping
+      ? LOOP_BREAK_MESSAGE
+      : modelResult.assistant_message;
 
-    // 🔥 NOUVEAU : casser la boucle
-    if (isLooping) {
-      assistantText = `
-On tourne autour du même point.
+    const assistantDisplayText = isLooping
+      ? LOOP_BREAK_DISPLAY
+      : modelResult.assistant_message;
 
-Je vais forcer une clarification.
-
-👉 Si tu dois choisir ce qui te bloque le plus aujourd’hui :
-
-A) peur de revivre un échec
-B) besoin de contrôle total
-C) difficulté à faire confiance
-D) manque de méthode pour déléguer
-E) autre chose (précise)
-
-Choisis UNE seule option.
-Pas deux.
-      `.trim();
-    }
-
-    const assistantMessage = makeMessage("assistant", assistantText);
-
+    const assistantMessage = makeMessage("assistant", assistantStoredText);
     const finalMessages = [...updatedMessagesAfterUser, assistantMessage];
 
     const userMessageCount = finalMessages.filter(
       (message) => message.role === "user"
     ).length;
 
-    const finalizeNow = shouldFinalize({
+    const finalizeInput = {
       userMessageCount,
       completionScore: modelResult.diagnostic_state.completion_score,
       coveredDimensionsCount:
         modelResult.diagnostic_state.covered_dimensions.length,
       enoughInformation: modelResult.diagnostic_state.enough_information,
-    });
+    };
+
+    const finalizeNow = shouldFinalize(finalizeInput);
+
+    // Log de debugging — utile pour calibrer les seuils
+    console.log("[shouldFinalize]", getFinalizeReasonLabel(finalizeInput));
+    if (isLooping) {
+      console.log("[chat] Loop detected — injecting break message");
+    }
 
     await prisma.diagnosticSession.update({
       where: { id: session.id },
@@ -129,11 +156,11 @@ Pas deux.
     });
 
     return NextResponse.json({
-      assistant_message: assistantText,
+      assistant_message: assistantDisplayText,
       diagnostic_state: modelResult.diagnostic_state,
       should_finalize: finalizeNow,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Chat route error:", error);
 
     if (error instanceof z.ZodError) {

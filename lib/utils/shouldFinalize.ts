@@ -5,35 +5,63 @@ type ShouldFinalizeInput = {
   enoughInformation: boolean;
 };
 
-export const HARD_STOP_AT = 14;
+export const HARD_STOP_AT = 16;
 
-export function shouldFinalize({
+export type FinalizeReason =
+  | "hard_stop"
+  | "optimal"
+  | "acceptable"
+  | "not_yet";
+
+export function getFinalizeReason({
   userMessageCount,
   completionScore,
   coveredDimensionsCount,
   enoughInformation,
-}: ShouldFinalizeInput): boolean {
-  // sécurité absolue
+}: ShouldFinalizeInput): FinalizeReason {
+  // Sécurité absolue
   if (userMessageCount >= HARD_STOP_AT) {
-    return true;
+    return "hard_stop";
   }
 
-  // on ne finalise jamais avant une vraie profondeur
-  const hasMinimumDepth = userMessageCount >= 10;
+  // Finalisation optimale — toutes conditions réunies
+  if (
+    userMessageCount >= 10 &&
+    coveredDimensionsCount >= 8 &&
+    completionScore >= 0.8 &&
+    enoughInformation === true
+  ) {
+    return "optimal";
+  }
 
-  // on veut une couverture plus large des dimensions
-  const hasEnoughCoverage = coveredDimensionsCount >= 7;
+  // Finalisation acceptable — conditions partiellement réunies
+  if (
+    userMessageCount >= 13 &&
+    coveredDimensionsCount >= 6 &&
+    completionScore >= 0.7
+  ) {
+    return "acceptable";
+  }
 
-  // score IA plus exigeant
-  const hasGoodScore = completionScore >= 0.82;
+  return "not_yet";
+}
 
-  // validation IA
-  const aiFeelsReady = enoughInformation === true;
+export function shouldFinalize(input: ShouldFinalizeInput): boolean {
+  const reason = getFinalizeReason(input);
+  return reason !== "not_yet";
+}
 
-  return (
-    hasMinimumDepth &&
-    hasEnoughCoverage &&
-    hasGoodScore &&
-    aiFeelsReady
-  );
+export function getFinalizeReasonLabel(input: ShouldFinalizeInput): string {
+  const reason = getFinalizeReason(input);
+
+  switch (reason) {
+    case "hard_stop":
+      return `Hard stop déclenché : ${input.userMessageCount} messages utilisateur >= limite de ${HARD_STOP_AT}.`;
+    case "optimal":
+      return `Finalisation optimale : ${input.userMessageCount} messages, ${input.coveredDimensionsCount}/10 dimensions couvertes, score ${input.completionScore.toFixed(2)}, IA prête.`;
+    case "acceptable":
+      return `Finalisation acceptable : ${input.userMessageCount} messages, ${input.coveredDimensionsCount}/10 dimensions couvertes, score ${input.completionScore.toFixed(2)} — seuil minimal atteint.`;
+    case "not_yet":
+      return `Pas encore : ${input.userMessageCount} messages, ${input.coveredDimensionsCount}/10 dimensions, score ${input.completionScore.toFixed(2)}, IA prête: ${input.enoughInformation}.`;
+  }
 }

@@ -50,43 +50,14 @@ export async function callConversationModel({
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-4.1-mini",
-      temperature: 0.55, // 🔥 plus bas = trop structuré
+      model: "gpt-4o-mini",
+      temperature: 0.6,
       response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
           content: conversationSystemPrompt,
         },
-
-        // 🔥 AJOUT CRITIQUE
-        {
-          role: "system",
-          content: `
-Tu es dans une conversation en cours.
-
-Tu ne redémarres JAMAIS de zéro.
-Tu continues un diagnostic déjà entamé.
-
-Ton rôle n’est pas d’analyser globalement.
-Ton rôle est de faire avancer le diagnostic étape par étape.
-
-Tu dois :
-- reprendre le dernier point implicite
-- faire progresser la réflexion
-- poser UNE question utile
-- éviter les grandes questions ouvertes
-- forcer la clarification ou l’arbitrage
-
-Tu ne dois jamais :
-- repartir sur une question générique
-- reformuler toute la situation
-- faire du coaching large
-
-Tu es un moteur de progression, pas un observateur.
-          `.trim(),
-        },
-
         {
           role: "user",
           content: userPrompt,
@@ -107,9 +78,22 @@ Tu es un moteur de progression, pas un observateur.
     throw new Error("No content returned by model");
   }
 
+  let parsed: ConversationModelResult;
+
   try {
-    return JSON.parse(content) as ConversationModelResult;
+    parsed = JSON.parse(content) as ConversationModelResult;
   } catch {
-    throw new Error("Model did not return valid JSON");
+    throw new Error(`Model did not return valid JSON. Raw content: ${content.slice(0, 200)}`);
   }
+
+  // Validation minimale — évite des crashes silencieux en aval
+  if (!parsed.assistant_message || typeof parsed.assistant_message !== "string") {
+    throw new Error("Model response missing assistant_message field");
+  }
+
+  if (!parsed.diagnostic_state || typeof parsed.diagnostic_state !== "object") {
+    throw new Error("Model response missing diagnostic_state field");
+  }
+
+  return parsed;
 }

@@ -37,6 +37,13 @@ export function buildFinalizationPrompt({
     createur: "/offre/createur",
   } as const;
 
+  const modelRecommandeMap = {
+    entrepreneur: "SaaS + contenu + MRR autonome",
+    salarie: "Transition progressive MRR",
+    independant: "Expert positionné offres premium",
+    createur: "Audience + communauté + abonnement",
+  } as const;
+
   return `
 Tu es NeuroBreak Priority™, moteur de finalisation.
 
@@ -67,6 +74,36 @@ RÈGLES MÉTIER
 - le profil_label doit être exactement : ${profileLabelMap[profilSelected]}
 - language doit être "fr"
 - version doit être "1.0"
+
+RÈGLES MÉTIER — CHAMPS PRIORITY OS (CRITIQUES)
+
+dimension_scores :
+- Produit 10 scores entiers de 0 à 10
+- Chaque score reflète RÉELLEMENT ce qui est ressorti de la conversation
+- 8 à 10 = dimension dominante, clairement et répétitivement exprimée
+- 5 à 7 = dimension présente mais non dominante
+- 2 à 4 = dimension effleurée, mentionnée sans profondeur
+- 0 à 1 = dimension absente ou explicitement rejetée
+- Ne pas normaliser artificiellement — les scores doivent être honnêtes
+- Il est normal d'avoir plusieurs scores bas si les dimensions n'ont pas émergé
+
+model_recommande :
+- Choisir EXACTEMENT une de ces 4 valeurs, sans variation :
+  "SaaS + contenu + MRR autonome"
+  "Transition progressive MRR"
+  "Expert positionné offres premium"
+  "Audience + communauté + abonnement"
+- Croiser le profil_selected ET les 2 ou 3 dimension_scores les plus élevés
+- En cas de doute : la valeur par défaut selon le profil est "${modelRecommandeMap[profilSelected]}"
+- Ne jamais inventer une 5e valeur
+
+profil_summary :
+- 2 à 3 phrases maximum
+- Commence TOUJOURS par une observation directe sur la personne, pas une promesse
+- Ton NeuroBreak : direct, incarné, sobre, jamais générique
+- Cette phrase sera affichée sur la page résultat GHL — elle doit résonner pour cette personne spécifique
+- Mauvais exemple : "Vous êtes quelqu'un de motivé qui cherche à aligner sa vie professionnelle."
+- Bon exemple : "Ce qui pilote tes décisions, c'est le besoin que rien ne te soit imposé. Tu construis pour être libre — pas pour être riche. Et tant que ce n'est pas clair dans ton business, tu sabotes."
 
 UTILISATEUR
 - first_name: ${firstName}
@@ -150,15 +187,32 @@ FORMAT À RESPECTER EXACTEMENT
   },
   "cta": {
     "headline": "Prêt à aligner ton business sur ce que tu es vraiment ?",
-    "subtext": "Ce diagnostic n’est que la première étape.",
-    "button_label": "Accéder à mon plan d’action personnalisé",
+    "subtext": "Ce diagnostic n'est que la première étape.",
+    "button_label": "Accéder à mon plan d'action personnalisé",
     "redirect": "${redirectMap[profilSelected]}"
-  }
+  },
+  "dimension_scores": {
+    "liberte_autonomie": 9,
+    "securite_stabilite": 4,
+    "croissance_progression": 8,
+    "impact_reconnaissance": 7,
+    "liens_humains": 5,
+    "famille": 6,
+    "creation_expression": 8,
+    "aventure_experiences": 6,
+    "sens_mission": 5,
+    "confort_materiel": 2
+  },
+  "model_recommande": "${modelRecommandeMap[profilSelected]}",
+  "profil_summary": "Ce qui pilote tes décisions, c'est le besoin que rien ne te soit imposé. Tu construis pour être libre — pas pour être riche. Et tant que ce n'est pas clair dans ton business, tu sabotes."
 }
 
 CONTRAINTES FINALES
 - 8 à 10 priorités obligatoires
 - tous les champs requis doivent être remplis
 - aucun texte hors JSON
+- dimension_scores : 10 entiers entre 0 et 10, honnêtes, dérivés de la conversation
+- model_recommande : exactement une des 4 valeurs autorisées
+- profil_summary : 2-3 phrases, observation directe, ton NeuroBreak
 `.trim();
 }
