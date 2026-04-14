@@ -7,6 +7,16 @@ type RouteContext = {
   }>;
 };
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 export async function GET(_req: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
@@ -18,7 +28,7 @@ export async function GET(_req: Request, context: RouteContext) {
     if (!result) {
       return NextResponse.json(
         { error: "Result not found" },
-        { status: 404 }
+        { status: 404, headers: CORS_HEADERS }
       );
     }
 
@@ -27,24 +37,14 @@ export async function GET(_req: Request, context: RouteContext) {
         result_id: result.id,
         diagnostic: result.diagnosticJson,
       },
-      {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
+      { status: 200, headers: CORS_HEADERS }
     );
   } catch (error) {
     console.error("Result fetch error:", error);
 
     return NextResponse.json(
       { error: "Server error while fetching result" },
-      {
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
+      { status: 500, headers: CORS_HEADERS }
     );
   }
 }
