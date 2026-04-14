@@ -94,14 +94,7 @@ export function ChatShell() {
       const data = (await response.json()) as CreateSessionResponse;
       setSessionId(data.session_id);
 
-      const welcomeMessage: UiMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content:
-          "Quand tu regardes ta situation actuelle, qu’est-ce qui te pèse le plus en ce moment ?",
-      };
-
-      setMessages([welcomeMessage]);
+      setMessages([]);
     } catch (err) {
       console.error(err);
       setError("Impossible de créer la session.");
