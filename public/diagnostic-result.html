@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ton diagnostic Priority OS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f1117; color: #e8e6df; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.7; }
+  a { color: inherit; text-decoration: none; }
+
+  #po-loading {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 40px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid #2a2d3a;
+    border-top-color: #7F77DD; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #po-error-block {
+    display: none; min-height: 100vh;
+    align-items: center; justify-content: center; padding: 40px; text-align: center;
+  }
+  #po-error { color: #E24B4A; font-size: 15px; max-width: 500px; }
+
+  #po-content { display: none; }
+
+  .hero {
+    background: linear-gradient(180deg, #1a1d2e 0%, #0f1117 100%);
+    padding: 80px 24px 60px; text-align: center;
+    border-bottom: 1px solid #2a2d3a;
+  }
+  .hero-badge {
+    display: inline-block; background: #EEEDFE; color: #3C3489;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 24px;
+  }
+  .hero-name { font-size: 42px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .hero-profil { font-size: 16px; color: #7F77DD; font-weight: 500; margin-bottom: 32px; }
+  .hero-headline {
+    font-size: 22px; font-weight: 600; color: #fff;
+    max-width: 680px; margin: 0 auto 20px; line-height: 1.4;
+  }
+  .hero-summary {
+    font-size: 16px; color: #a8a49c; max-width: 640px;
+    margin: 0 auto; line-height: 1.8;
+  }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+  .section { padding: 60px 0; border-bottom: 1px solid #1e2130; }
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #7F77DD; margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 8px;
+  }
+  .section-intro { font-size: 15px; color: #a8a49c; margin-bottom: 40px; line-height: 1.7; }
+
+  /* Profil summary */
+  .profil-summary-block {
+    background: #1a1d2e; border-left: 4px solid #7F77DD;
+    border-radius: 0 12px 12px 0; padding: 24px 28px; margin-bottom: 40px;
+    font-size: 17px; color: #e8e6df; line-height: 1.8; font-style: italic;
+  }
+
+  /* Model recommande */
+  .model-block {
+    background: #13161f; border: 1px solid #2a2d3a;
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 40px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .model-icon {
+    width: 44px; height: 44px; background: #EEEDFE; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .model-label { font-size: 11px; color: #7F77DD; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .model-value { font-size: 17px; font-weight: 600; color: #fff; }
+
+  /* Drivers */
+  .drivers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 0; }
+  @media (max-width: 600px) { .drivers-grid { grid-template-columns: 1fr; } }
+  .driver-card { background: #13161f; border: 1px solid #2a2d3a; border-radius: 12px; padding: 20px; }
+  .driver-card-label { font-size: 11px; color: #a8a49c; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .driver-card-text { font-size: 15px; color: #e8e6df; line-height: 1.6; }
+
+  /* Priorities */
+  .priority-item {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 24px 0; border-bottom: 1px solid #1e2130;
+  }
+  .priority-item:last-child { border-bottom: none; }
+  .priority-rank {
+    font-size: 32px; font-weight: 800; color: #7F77DD;
+    opacity: 0.35; min-width: 48px; line-height: 1; padding-top: 4px;
+  }
+  .priority-body { flex: 1; }
+  .priority-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+  .priority-desc { font-size: 14px; color: #a8a49c; line-height: 1.7; margin-bottom: 10px; }
+  .priority-rec { font-size: 13px; color: #7F77DD; font-style: italic; }
+  .impact-badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 10px; border-radius: 10px; margin-bottom: 8px;
+  }
+  .impact-high { background: #EEEDFE; color: #3C3489; }
+  .impact-medium { background: #FAEEDA; color: #633806; }
+  .impact-low { background: #F1EFE8; color: #444441; }
+
+  /* Dimension scores */
+  .dim-row { margin-bottom: 16px; }
+  .dim-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .dim-name { font-size: 14px; color: #c8c4bc; }
+  .dim-score { font-size: 14px; font-weight: 600; }
+  .dim-bar-bg { background: #1e2130; border-radius: 4px; height: 6px; overflow: hidden; }
+  .dim-bar { height: 6px; border-radius: 4px; transition: width 1s ease; }
+
+  /* Tensions */
+  .tension-item {
+    background: #13161f; border: 1px solid #2a2d3a;
+    border-radius: 12px; padding: 24px; margin-bottom: 16px;
+  }
+  .tension-title { font-size: 17px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+  .tension-desc { font-size: 14px; color: #a8a49c; line-height: 1.7; margin-bottom: 12px; }
+  .tension-balance {
+    font-size: 13px; color: #1D9E75; padding-top: 12px;
+    border-top: 1px solid #1e2130;
+  }
+
+  /* Projection */
+  .projection-future {
+    background: #1a1d2e; border-radius: 12px; padding: 28px;
+    font-size: 17px; color: #e8e6df; line-height: 1.8; margin-bottom: 24px;
+    border-left: 4px solid #1D9E75;
+  }
+  .projection-shift {
+    font-size: 15px; color: #a8a49c; font-style: italic; line-height: 1.7;
+  }
+
+  /* CTA */
+  .cta-section {
+    background: #1a1d2e; border-top: 1px solid #2a2d3a;
+    padding: 80px 24px; text-align: center;
+  }
+  .cta-headline { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+  .cta-subtext { font-size: 16px; color: #a8a49c; margin-bottom: 36px; }
+  .cta-button {
+    display: inline-block; background: #7F77DD; color: #fff;
+    font-size: 16px; font-weight: 600; padding: 18px 40px;
+    border-radius: 10px; transition: background 0.2s;
+    cursor: pointer; border: none;
+  }
+  .cta-button:hover { background: #534AB7; }
+</style>
+</head>
+<body>
+
+<div id="po-loading">
+  <div class="spinner"></div>
+  <p style="color:#a8a49c;font-size:15px;">Chargement de ton diagnostic…</p>
+</div>
+
+<div id="po-error-block">
+  <p id="po-error"></p>
+</div>
+
+<div id="po-content">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">Diagnostic Priority OS</div>
+    <div class="hero-name">Bonjour <span id="po-first-name"></span></div>
+    <div class="hero-profil">Profil · <span id="po-profil-label"></span></div>
+    <div class="hero-headline" id="po-headline"></div>
+    <div class="hero-summary" id="po-summary"></div>
+  </div>
+
+  <div class="container">
+
+    <!-- PROFIL PERSONNALISÉ -->
+    <div class="section">
+      <div class="section-label">Ton profil</div>
+      <div class="section-title">Ce qui pilote vraiment tes décisions</div>
+      <div class="profil-summary-block" id="po-profil-summary"></div>
+      <div class="model-block">
+        <div class="model-icon">◎</div>
+        <div>
+          <div class="model-label">Modèle économique recommandé</div>
+          <div class="model-value" id="po-model-recommande"></div>
+        </div>
+      </div>
+      <div class="drivers-grid">
+        <div class="driver-card">
+          <div class="driver-card-label">Ce qui te motive vraiment</div>
+          <div class="driver-card-text" id="po-core-driver"></div>
+        </div>
+        <div class="driver-card">
+          <div class="driver-card-label">Ta peur principale</div>
+          <div class="driver-card-text" id="po-core-fear"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIORITÉS -->
+    <div class="section">
+      <div class="section-label">Tes priorités profondes</div>
+      <div class="section-title">Ce qui compte vraiment pour toi</div>
+      <div class="section-intro" id="po-hidden-pattern"></div>
+      <div id="po-priorities"></div>
+    </div>
+
+    <!-- SCORES DIMENSIONS -->
+    <div class="section" id="po-scores-section" style="display:none;">
+      <div class="section-label">Intensité par dimension</div>
+      <div class="section-title">Tes 10 dimensions psychologiques</div>
+      <div class="section-intro">Score de 0 à 10 — basé sur ce qui est ressorti de ta conversation.</div>
+      <div id="po-dimension-scores"></div>
+    </div>
+
+    <!-- TENSIONS -->
+    <div class="section">
+      <div class="section-label">Tes tensions internes</div>
+      <div class="section-title">Ce qui te freine sans que tu t'en rendes compte</div>
+      <div id="po-tensions"></div>
+    </div>
+
+    <!-- PROJECTION -->
+    <div class="section">
+      <div class="section-label">Ta projection</div>
+      <div class="section-title">À quoi ressemble ta vie alignée</div>
+      <div class="projection-future" id="po-aligned-future"></div>
+      <div class="projection-shift" id="po-emotional-shift"></div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="cta-headline" id="po-cta-headline"></div>
+    <div class="cta-subtext" id="po-cta-subtext"></div>
+    <a id="po-cta-button" class="cta-button" href="#">Accéder à mon plan d'action</a>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var API = "https://neurobreak-priority.vercel.app";
+
+  function getRid() {
+    return new URLSearchParams(window.location.search).get("rid");
+  }
+
+  function el(id) { return document.getElementById(id); }
+
+  function setText(id, val) {
+    var e = el(id);
+    if (e && val != null) e.textContent = val;
+  }
+
+  function setHTML(id, val) {
+    var e = el(id);
+    if (e && val != null) e.innerHTML = val;
+  }
+
+  function show(id) {
+    var e = el(id);
+    if (e) e.style.display = "";
+  }
+
+  function hide(id) {
+    var e = el(id);
+    if (e) e.style.display = "none";
+  }
+
+  function impactClass(level) {
+    if (level === "high") return "impact-high";
+    if (level === "medium") return "impact-medium";
+    return "impact-low";
+  }
+
+  function impactLabel(level) {
+    if (level === "high") return "Impact élevé";
+    if (level === "medium") return "Impact modéré";
+    return "Impact faible";
+  }
+
+  function buildPriorities(priorities) {
+    if (!priorities || !priorities.length) return "";
+    return priorities.map(function(p) {
+      return '<div class="priority-item">'
+        + '<div class="priority-rank">' + p.rank + '</div>'
+        + '<div class="priority-body">'
+        + '<span class="impact-badge ' + impactClass(p.impact_level) + '">' + impactLabel(p.impact_level) + '</span>'
+        + '<div class="priority-title">' + (p.title || "") + '</div>'
+        + '<div class="priority-desc">' + (p.description || "") + '</div>'
+        + (p.recommendation ? '<div class="priority-rec">→ ' + p.recommendation + '</div>' : "")
+        + '</div></div>';
+    }).join("");
+  }
+
+  function buildScores(scores) {
+    if (!scores) return "";
+    var labels = {
+      liberte_autonomie: "Liberté & Autonomie",
+      securite_stabilite: "Sécurité & Stabilité",
+      croissance_progression: "Croissance & Progression",
+      impact_reconnaissance: "Impact & Reconnaissance",
+      liens_humains: "Liens Humains",
+      famille: "Famille & Protection",
+      creation_expression: "Création & Expression",
+      aventure_experiences: "Expériences & Aventure",
+      sens_mission: "Sens & Mission",
+      confort_materiel: "Confort Matériel"
+    };
+    var entries = Object.entries(scores).sort(function(a, b) { return b[1] - a[1]; });
+    return entries.map(function(entry) {
+      var key = entry[0], val = entry[1];
+      var pct = Math.round((val / 10) * 100);
+      var color = val >= 8 ? "#7F77DD" : val >= 5 ? "#1D9E75" : "#5F5E5A";
+      return '<div class="dim-row">'
+        + '<div class="dim-header">'
+        + '<span class="dim-name">' + (labels[key] || key) + '</span>'
+        + '<span class="dim-score" style="color:' + color + '">' + val + '/10</span>'
+        + '</div>'
+        + '<div class="dim-bar-bg"><div class="dim-bar" style="width:' + pct + '%;background:' + color + ';"></div></div>'
+        + '</div>';
+    }).join("");
+  }
+
+  function buildTensions(tensions) {
+    if (!tensions || !tensions.length) return "";
+    return tensions.map(function(t) {
+      return '<div class="tension-item">'
+        + '<div class="tension-title">' + (t.title || "") + '</div>'
+        + '<div class="tension-desc">' + (t.description || "") + '</div>'
+        + (t.how_to_balance ? '<div class="tension-balance">→ ' + t.how_to_balance + '</div>' : "")
+        + '</div>';
+    }).join("");
+  }
+
+  function render(d) {
+    setText("po-first-name", d.user && d.user.first_name);
+    setText("po-profil-label", d.meta && d.meta.profil_label);
+    setText("po-headline", d.global_summary && d.global_summary.headline);
+    setText("po-summary", d.global_summary && d.global_summary.summary);
+    setText("po-profil-summary", d.profil_summary || "");
+    setText("po-model-recommande", d.model_recommande || "");
+    setText("po-core-driver", d.global_summary && d.global_summary.core_driver);
+    setText("po-core-fear", d.global_summary && d.global_summary.core_fear);
+    setText("po-hidden-pattern", d.global_summary && d.global_summary.hidden_pattern);
+    setHTML("po-priorities", buildPriorities(d.priorities));
+    setHTML("po-tensions", buildTensions(d.tensions));
+    setText("po-aligned-future", d.projection && d.projection.aligned_future);
+    setText("po-emotional-shift", d.projection && d.projection.emotional_shift);
+
+    if (d.dimension_scores) {
+      setHTML("po-dimension-scores", buildScores(d.dimension_scores));
+      show("po-scores-section");
+    }
+
+    setText("po-cta-headline", d.cta && d.cta.headline);
+    setText("po-cta-subtext", d.cta && d.cta.subtext);
+    var btn = el("po-cta-button");
+    if (btn && d.cta) {
+      btn.textContent = d.cta.button_label || "Accéder à mon plan";
+      btn.href = d.cta.redirect || "#";
+    }
+
+    hide("po-loading");
+    show("po-content");
+  }
+
+  function showError(msg) {
+    setText("po-error", msg);
+    el("po-error-block").style.display = "flex";
+    hide("po-loading");
+  }
+
+  function load() {
+    var rid = getRid();
+    if (!rid) {
+      showError("Aucun identifiant de diagnostic dans l'URL. Vérifie le lien.");
+      return;
+    }
+    fetch(API + "/api/diagnostic/result/" + rid)
+      .then(function(res) {
+        if (!res.ok) throw new Error("API " + res.status);
+        return res.json();
+      })
+      .then(function(json) {
+        if (!json.diagnostic) throw new Error("Données absentes");
+        render(json.diagnostic);
+      })
+      .catch(function(err) {
+        console.error("[Priority OS]", err);
+        showError("Erreur lors du chargement du diagnostic. Contacte le support si le problème persiste.");
+      });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", load);
+  } else {
+    load();
+  }
+})();
+</script>
+</body>
+</html>
