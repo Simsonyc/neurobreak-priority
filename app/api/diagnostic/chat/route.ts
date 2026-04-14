@@ -28,57 +28,6 @@ function makeMessage(
   };
 }
 
-// Marqueur unique pour identifier le message de boucle forcée.
-// Permet de ne pas le confondre avec un vrai message de l'IA lors de la
-// détection au tour suivant.
-const LOOP_BREAK_MARKER = "__loop_break__";
-
-// Détecte une vraie boucle conversationnelle en excluant les messages de
-// boucle forcée déjà injectés — pour éviter que la sortie de boucle ne
-// déclenche elle-même la boucle au tour suivant.
-function isRepeatingPattern(messages: StoredMessage[]): boolean {
-  if (messages.length < 6) return false;
-
-  // On ignore les messages de boucle forcée déjà envoyés
-  const realAssistantMessages = messages
-    .filter(
-      (m) =>
-        m.role === "assistant" && !m.content.includes(LOOP_BREAK_MARKER)
-    )
-    .slice(-3)
-    .map((m) => m.content.toLowerCase());
-
-  if (realAssistantMessages.length < 3) return false;
-
-  // Détecte si les 3 derniers vrais messages de l'IA tournent autour des
-  // mêmes thèmes — signal que le modèle est bloqué
-  const loopSignals = ["tu bloques", "même point", "contrôle", "déléguer", "confiance"];
-  const matchCount = realAssistantMessages.filter((msg) =>
-    loopSignals.some((signal) => msg.includes(signal))
-  ).length;
-
-  return matchCount >= 2;
-}
-
-const LOOP_BREAK_MESSAGE = `${LOOP_BREAK_MARKER}
-On tourne autour du même point. Je vais forcer une clarification.
-
-👉 Si tu dois choisir ce qui te bloque le plus aujourd'hui :
-
-A) peur de revivre un échec
-B) besoin de contrôle total
-C) difficulté à faire confiance
-D) manque de méthode pour déléguer
-E) autre chose (précise)
-
-Choisis UNE seule option. Pas deux.`.trim();
-
-// Texte affiché à l'utilisateur — sans le marqueur technique
-const LOOP_BREAK_DISPLAY = LOOP_BREAK_MESSAGE.replace(
-  LOOP_BREAK_MARKER + "\n",
-  ""
-);
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -99,12 +48,9 @@ export async function POST(req: Request) {
     const userMessage = makeMessage("user", parsed.user_message);
     const updatedMessagesAfterUser = [...existingMessages, userMessage];
 
-    const isLooping = isRepeatingPattern(updatedMessagesAfterUser);
-
     const conversationHistory = updatedMessagesAfterUser.map((message) => ({
       role: message.role,
-      // On nettoie le marqueur avant d'envoyer l'historique à l'IA
-      content: message.content.replace(LOOP_BREAK_MARKER + "\n", ""),
+      content: message.content,
     }));
 
     const modelResult = await callConversationModel({
@@ -113,21 +59,14 @@ export async function POST(req: Request) {
       conversationHistory,
     });
 
-    // Si boucle détectée : on remplace le message affiché mais on stocke
-    // le marqueur pour que la détection future fonctionne correctement
-    const assistantStoredText = isLooping
-      ? LOOP_BREAK_MESSAGE
-      : modelResult.assistant_message;
-
-    const assistantDisplayText = isLooping
-      ? LOOP_BREAK_DISPLAY
-      : modelResult.assistant_message;
-
-    const assistantMessage = makeMessage("assistant", assistantStoredText);
+    const assistantMessage = makeMessage(
+      "assistant",
+      modelResult.assistant_message
+    );
     const finalMessages = [...updatedMessagesAfterUser, assistantMessage];
 
     const userMessageCount = finalMessages.filter(
-      (message) => message.role === "user"
+      (m) => m.role === "user"
     ).length;
 
     const finalizeInput = {
@@ -140,11 +79,9 @@ export async function POST(req: Request) {
 
     const finalizeNow = shouldFinalize(finalizeInput);
 
-    // Log de debugging — utile pour calibrer les seuils
     console.log("[shouldFinalize]", getFinalizeReasonLabel(finalizeInput));
-    if (isLooping) {
-      console.log("[chat] Loop detected — injecting break message");
-    }
+    console.log("[covered]", modelResult.diagnostic_state.covered_dimensions);
+    console.log("[score]", modelResult.diagnostic_state.completion_score);
 
     await prisma.diagnosticSession.update({
       where: { id: session.id },
@@ -156,7 +93,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      assistant_message: assistantDisplayText,
+      assistant_message: modelResult.assistant_message,
       diagnostic_state: modelResult.diagnostic_state,
       should_finalize: finalizeNow,
     });
@@ -165,10 +102,7 @@ export async function POST(req: Request) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        {
-          error: "Invalid payload",
-          details: error.flatten(),
-        },
+        { error: "Invalid payload", details: error.flatten() },
         { status: 400 }
       );
     }

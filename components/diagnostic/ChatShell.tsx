@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type UiMessage = {
   id: string;
@@ -45,12 +45,14 @@ const PROFILE_OPTIONS = [
 
 export function ChatShell() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const profilFromUrl = searchParams.get("profil") as "entrepreneur" | "salarie" | "independant" | "createur" | null;
 
-  const [firstName, setFirstName] = useState("Christophe");
-  const [email, setEmail] = useState("test@email.com");
+  const [firstName, setFirstName] = useState("");
+  const [email, setEmail] = useState("");
   const [profilSelected, setProfilSelected] = useState<
     "entrepreneur" | "salarie" | "independant" | "createur"
-  >("entrepreneur");
+  >(profilFromUrl ?? "entrepreneur");
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<UiMessage[]>([]);
@@ -129,7 +131,8 @@ export function ChatShell() {
       }
 
       const data = (await response.json()) as FinalizeResponse;
-      window.location.href = `https://neuropriority-reveal.vibepreview.com/?rid=${data.result_id}`;
+      const resultUrl = process.env.NEXT_PUBLIC_RESULT_PAGE_URL ?? "https://neuropriority-reveal.vibepreview.com";
+      window.location.href = `${resultUrl}?rid=${data.result_id}`;
     } catch (err) {
       console.error(err);
       setError("Impossible de finaliser le diagnostic.");
