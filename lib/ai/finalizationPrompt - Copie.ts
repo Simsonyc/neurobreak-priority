@@ -31,10 +31,10 @@ export function buildFinalizationPrompt({
   } as const;
 
   const redirectMap = {
-    entrepreneur: "https://priority-os.vibepreview.com/",
-    salarie: "https://clone-of-priority-os.vibepreview.com/",
-    independant: "https://clone-of-clone-of-2.vibepreview.com/",
-    createur: "https://clone-of-clone-of-3.vibepreview.com/",
+    entrepreneur: "/offre/entrepreneur",
+    salarie: "/offre/salarie",
+    independant: "/offre/independant",
+    createur: "/offre/createur",
   } as const;
 
   const modelRecommandeMap = {
