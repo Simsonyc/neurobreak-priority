@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db/client";
@@ -114,7 +115,7 @@ export async function POST(req: Request) {
         firstName: session.firstName,
         email: session.email,
         profilSelected: session.profilSelected,
-        diagnosticJson: diagnostic,
+        diagnosticJson: diagnostic as unknown as Prisma.InputJsonValue,
       },
     });
 
