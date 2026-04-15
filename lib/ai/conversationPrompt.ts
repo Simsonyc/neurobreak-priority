@@ -124,7 +124,7 @@ export function buildConversationUserPrompt({
   let instruction = "";
 
   if (isFirstTurn) {
-    instruction = `Premier tour. 1 phrase d'accueil max, puis pose immédiatement [1/10] liberte_autonomie avec 7 options courtes (5 mots max chacune).`;
+    instruction = `C'est le tout premier message. Pose IMMÉDIATEMENT la question fermée [1/10] sur liberte_autonomie. 7 options A→G, 5 mots max par option. Pas d'introduction, pas de phrase d'accueil. Commence directement par [1/10].`;
   } else if (allDone) {
     instruction = `Toutes les dimensions sont couvertes. Une phrase de conclusion courte. Passe enough_information à true.`;
   } else if (exchangeInDimension === 0) {

@@ -375,7 +375,7 @@ export function ChatShell() {
 
             {/* Messages */}
             <div style={{ flex: 1, overflowY: "auto", paddingBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
-              {messages.map((msg, idx) => {
+              {messages.filter(m => m.content !== "Démarre le diagnostic.").map((msg, idx) => {
                 const isLast = idx === messages.length - 1;
                 const isAssistant = msg.role === "assistant";
 
