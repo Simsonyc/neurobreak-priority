@@ -234,12 +234,6 @@ export function ChatShell() {
   const progress = diagnosticState ? Math.round(diagnosticState.completion_score * 100) : 0;
 
   return (
-    <style>{`
-      @keyframes nbounce {
-        0%, 100% { transform: translateY(0); opacity: 0.4; }
-        50% { transform: translateY(-6px); opacity: 1; }
-      }
-    `}</style>
     <main
       className="min-h-screen"
       style={{
@@ -467,10 +461,9 @@ export function ChatShell() {
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                       <span style={{ display: "inline-flex", gap: 4 }}>
                         {[0, 150, 300].map((delay) => (
-                          <span key={delay} style={{
+                          <span className="animate-bounce" style={{
                             width: 6, height: 6, borderRadius: "50%", background: "#E8143C",
                             display: "inline-block",
-                            animation: "nbounce 1.2s ease-in-out infinite",
                             animationDelay: delay + "ms"
                           }} />
                         ))}
@@ -478,15 +471,10 @@ export function ChatShell() {
                       <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>Génération du diagnostic…</span>
                     </span>
                   ) : (
-                    <span style={{ display: "inline-flex", gap: 5 }}>
-                      {[0, 150, 300].map((delay) => (
-                        <span key={delay} style={{
-                          width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.3)",
-                          display: "inline-block",
-                          animation: "nbounce 1.2s ease-in-out infinite",
-                          animationDelay: delay + "ms"
-                        }} />
-                      ))}
+                    <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
+                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.4)", display: "inline-block", animationDelay: "0ms" }} />
+                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.4)", display: "inline-block", animationDelay: "150ms" }} />
+                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.4)", display: "inline-block", animationDelay: "300ms" }} />
                     </span>
                   )}
                 </div>
