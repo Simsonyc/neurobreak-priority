@@ -103,9 +103,13 @@ export function buildConversationUserPrompt({
           .join("\n")
       : "Aucun échange.";
 
-  const userMessages = conversationHistory.filter((m) => m.role === "user");
-  const assistantMessages = conversationHistory.filter((m) => m.role === "assistant");
-  const isFirstTurn = userMessages.length === 0;
+  const allMessages = conversationHistory;
+  const assistantMessages = allMessages.filter((m) => m.role === "assistant");
+  // Exclut le message de démarrage automatique "Démarre le diagnostic."
+  const userMessages = allMessages.filter(
+    (m) => m.role === "user" && m.content.trim() !== "Démarre le diagnostic."
+  );
+  const isFirstTurn = assistantMessages.length === 0;
 
   const closedCount = assistantMessages.filter((m) =>
     /\[\d+\/10\]/.test(m.content)
