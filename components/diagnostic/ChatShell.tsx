@@ -472,9 +472,9 @@ export function ChatShell() {
                     </span>
                   ) : (
                     <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
-                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.4)", display: "inline-block", animationDelay: "0ms" }} />
-                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.4)", display: "inline-block", animationDelay: "150ms" }} />
-                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.4)", display: "inline-block", animationDelay: "300ms" }} />
+                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "#E8143C", display: "inline-block", animationDelay: "0ms" }} />
+                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "#E8143C", display: "inline-block", animationDelay: "150ms" }} />
+                      <span className="animate-bounce" style={{ width: 7, height: 7, borderRadius: "50%", background: "#E8143C", display: "inline-block", animationDelay: "300ms" }} />
                     </span>
                   )}
                 </div>
