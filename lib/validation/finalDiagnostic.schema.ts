@@ -109,7 +109,7 @@ export const finalDiagnosticSchema = z.object({
       title: z.string().min(1),
       description: z.string().min(1),
     }),
-  }),
+  }).optional(),
   projection: z.object({
     aligned_future: z.string().min(1),
     what_changes: z.array(z.string()).min(1),
