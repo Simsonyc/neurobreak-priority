@@ -48,7 +48,48 @@ model DiagnosticResult {
   diagnosticJson Json            @map("diagnostic_json")
   createdAt      DateTime        @default(now()) @map("created_at")
 
-  session DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session          DiagnosticSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  engineOutput     PriorityEngineOutput?
+  moduleSelections ModuleSelection[]
+  appSession       AppSession?
 
   @@map("diagnostic_results")
+}
+
+model PriorityEngineOutput {
+  id         String   @id @default(cuid())
+  resultId   String   @unique
+  engineJson Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  result           DiagnosticResult  @relation(fields: [resultId], references: [id])
+  moduleSelections ModuleSelection[]
+}
+
+model ModuleSelection {
+  id                String   @id @default(cuid())
+  resultId          String
+  engineOutputId    String
+  moduleName        String
+  selectedOption    Json
+  regenerationCount Int      @default(0)
+  status            String   @default("in_progress")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  result       DiagnosticResult     @relation(fields: [resultId], references: [id])
+  engineOutput PriorityEngineOutput @relation(fields: [engineOutputId], references: [id])
+
+  @@unique([resultId, moduleName])
+}
+
+model AppSession {
+  id        String   @id @default(cuid())
+  resultId  String   @unique
+  progress  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  result DiagnosticResult @relation(fields: [resultId], references: [id])
 }
