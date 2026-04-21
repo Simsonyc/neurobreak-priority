@@ -38,7 +38,7 @@ export const PLATFORMS: Platform[] = [
     strengths: ["Très complet", "White-label possible", "Automatisations puissantes"],
     weaknesses: ["Interface pensée pour les agences", "Support anglophone majoritaire", "Onboarding à gérer soi-même"],
     francophone_support: "partiel",
-    solopreneur_fit: 3,
+    solopreneur_fit: 5,
     innovation_score: 4,
     notoriety_score: 5,
   },
@@ -127,7 +127,7 @@ export const PLATFORMS: Platform[] = [
     tagline: "GHL + ConvertBubble natif",
     plans: [
       { name: "Starter", price_usd: 97, price_eur: 90, price_cad: 132, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "conversation_bot"] },
-      { name: "Pro", price_usd: 297, price_eur: 273, price_cad: 405, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "membership_area", "subscription", "upsell", "lead_scoring", "tracking", "onboarding_automation", "conversation_bot", "segmentation_funnel"] },
+      { name: "Pro", price_usd: 297, price_eur: 273, price_cad: 404, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "membership_area", "subscription", "upsell", "lead_scoring", "tracking", "onboarding_automation", "conversation_bot", "segmentation_funnel"] },
     ],
     strengths: ["GHL complet + ConvertBubble sans surcoût", "Tunnels vidéo interactifs natifs", "Support francophone dédié", "Conçu pour solopreneurs FR", "Engagement vidéo intégré"],
     weaknesses: [],
