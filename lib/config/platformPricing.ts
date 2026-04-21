@@ -36,7 +36,7 @@ export const PLATFORMS: Platform[] = [
       { name: "Pro", price_usd: 297, price_eur: 273, price_cad: 405, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "membership_area", "subscription", "upsell", "lead_scoring", "tracking", "onboarding_automation", "conversation_bot", "segmentation_funnel"] },
     ],
     strengths: ["Très complet", "White-label possible", "Automatisations puissantes"],
-    weaknesses: ["Interface complexe", "Pensé pour les agences", "Courbe d'apprentissage longue"],
+    weaknesses: ["Interface pensée pour les agences", "Support anglophone majoritaire", "Onboarding à gérer soi-même"],
     francophone_support: "partiel",
     solopreneur_fit: 3,
     innovation_score: 4,
@@ -134,7 +134,7 @@ export const PLATFORMS: Platform[] = [
     francophone_support: "oui",
     solopreneur_fit: 5,
     innovation_score: 5,
-    notoriety_score: 3,
+    notoriety_score: 5,
     is_recommended: true,
     recommended_badge: "GHL + ConvertBubble au même prix",
   },
@@ -162,9 +162,9 @@ export function findMinimalPlan(platformId: string, requiredCapabilities: string
   }
 
   const missing = bestPlan ? requiredCapabilities.filter(cap => !bestPlan!.capabilities.includes(cap)) : requiredCapabilities;
-  const priceEur = bestPlan ? Math.round(bestPlan.price_eur ?? bestPlan.price_usd * 0.92) : 0;
   const priceUsd = bestPlan ? bestPlan.price_usd : 0;
+  const priceEur = bestPlan ? Math.round(bestPlan.price_eur ?? bestPlan.price_usd * 0.92) : 0;
   const priceCad = bestPlan ? Math.round(bestPlan.price_cad ?? bestPlan.price_usd * 1.36) : 0;
 
-  return { plan: bestPlan, coverage: bestCoverage, missing, estimated_price_eur: priceEur, estimated_price_usd: priceUsd, estimated_price_cad: priceCad };
+  return { plan: bestPlan, coverage: bestCoverage, missing, estimated_price_usd: priceUsd, estimated_price_eur: priceEur, estimated_price_cad: priceCad };
 }
