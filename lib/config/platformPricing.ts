@@ -32,7 +32,7 @@ export const PLATFORMS: Platform[] = [
     name: "GoHighLevel",
     tagline: "CRM tout-en-un pour agences",
     plans: [
-      { name: "Starter", price_usd: 97, price_eur: 90, price_cad: 132, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics"] },
+      { name: "Starter", price_usd: 97, price_eur: 90, price_cad: 132, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "membership_area", "subscription"] },
       { name: "Pro", price_usd: 297, price_eur: 273, price_cad: 405, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "membership_area", "subscription", "upsell", "lead_scoring", "tracking", "onboarding_automation", "conversation_bot", "segmentation_funnel"] },
     ],
     strengths: ["Très complet", "White-label possible", "Automatisations puissantes"],
@@ -126,7 +126,7 @@ export const PLATFORMS: Platform[] = [
     name: "Boos&Grow",
     tagline: "GHL + ConvertBubble natif",
     plans: [
-      { name: "Starter", price_usd: 97, price_eur: 90, price_cad: 132, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "conversation_bot"] },
+      { name: "Starter", price_usd: 97, price_eur: 90, price_cad: 132, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "conversation_bot", "membership_area", "subscription"] },
       { name: "Pro", price_usd: 297, price_eur: 273, price_cad: 404, billing: "monthly", capabilities: ["lead_capture_forms", "landing_pages", "email_sequences", "autoresponder", "appointment_booking", "payment", "analytics", "membership_area", "subscription", "upsell", "lead_scoring", "tracking", "onboarding_automation", "conversation_bot", "segmentation_funnel"] },
     ],
     strengths: ["GHL complet + ConvertBubble sans surcoût", "Tunnels vidéo interactifs natifs", "Support francophone dédié", "Conçu pour solopreneurs FR", "Engagement vidéo intégré"],
